@@ -4,12 +4,12 @@
 #include <optional>
 #include <memory>
 
-#define ENUM_TY() X(chernoz) X(seroz) X(water) X(rock)
+#define ENUM_SOIL() X(chernoz) X(seroz) X(water) X(rock)
 
 enum class SoilTy
 {
 #define X(a) a,
-	ENUM_TY()
+	ENUM_SOIL()
 #undef X
 };
 
@@ -57,7 +57,7 @@ template<>struct SoilMax<SoilTy::rock> {
 };
 
 #define X(a) static_assert(SoilMax<SoilTy::a>::defined, "forgot to define " #a);
-ENUM_TY()
+ENUM_SOIL()
 #undef X
 
 constexpr auto GetMaxrc(SoilTy t)
@@ -65,7 +65,7 @@ constexpr auto GetMaxrc(SoilTy t)
 	switch (t)
 	{
 #define X(a) case SoilTy::a: return SoilMax<SoilTy::a>::rc;
-	ENUM_TY()
+		ENUM_SOIL()
 #undef X
 	}
 }
@@ -90,3 +90,4 @@ private:
 	std::optional<Tree> tree;
 };
 
+#undef ENUM_SOIL

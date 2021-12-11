@@ -60,8 +60,8 @@ template<>struct TreeMax<TreeTy::pine> {
 	static constexpr Resources uptake_survival{
 		.Water = 3.7f / 3.93f
 	};
-	// 0-5 years = 10cm , 5-10 years = until 60 cm , 10 - .. = 0,6-1m:pine http://ogorodsadovod.com/entry/2585-skolko-rastet-sosna-pri-vyrashchivanii-na-uchastke#:~:text=%D0%91%D0%BE%D0%BB%D1%8C%D1%88%D0%B8%D0%BD%D1%81%D1%82%D0%B2%D0%BE%20%D1%81%D0%BE%D1%81%D0%B5%D0%BD%2C%20%D1%82%D0%B0%D0%BA%D0%B8%D1%85%20%D0%BA%D0%B0%D0%BA%20%D1%81%D0%BE%D1%81%D0%BD%D0%B0,6%20%D0%B4%D0%BE%201%20%D0%BC%20%D0%B5%D0%B6%D0%B5%D0%B3%D0%BE%D0%B4%D0%BD%D0%BE.
 
+	// 0-5 years = 10cm , 5-10 years = until 60 cm , 10 - .. = 0,6-1m:pine http://ogorodsadovod.com/entry/2585-skolko-rastet-sosna-pri-vyrashchivanii-na-uchastke#:~:text=%D0%91%D0%BE%D0%BB%D1%8C%D1%88%D0%B8%D0%BD%D1%81%D1%82%D0%B2%D0%BE%20%D1%81%D0%BE%D1%81%D0%B5%D0%BD%2C%20%D1%82%D0%B0%D0%BA%D0%B8%D1%85%20%D0%BA%D0%B0%D0%BA%20%D1%81%D0%BE%D1%81%D0%BD%D0%B0,6%20%D0%B4%D0%BE%201%20%D0%BC%20%D0%B5%D0%B6%D0%B5%D0%B3%D0%BE%D0%B4%D0%BD%D0%BE.
 	static float growth_rate(size_t age, std::mt19937& rng)
 	{
 		if (age > 50)return 0.0f;
@@ -106,13 +106,42 @@ struct MinUptake
 		return TreeMax<T>::uptake_norm;
 	}
 };
+template<TreeTy T>
+struct MaxHeight
+{
+	static constexpr auto Exec() noexcept
+	{
+		return TreeMax<T>::height;
+	}
+};
+template<TreeTy T>
+struct Uptake
+{
+	static constexpr auto Exec(float height) noexcept
+	{
+		return TreeMax<T>::uptake_coeff * height;
+	}
+};
 
+//this is my tree, my tree is amazing, give it a lick
 class Tree
 {
 public:
+	//sappling ctor
 	constexpr Tree(TreeTy type)
 		:type(type), uptake(Bridge<MinUptake>(type))
 	{}
+	constexpr Tree(TreeTy type, size_t age, float height)
+		: type(type), age(age), height(std::min(Bridge< MaxHeight >(type), height))
+		, uptake(Bridge<Uptake>(type, height))
+	{}
+public:
+	void Grow(std::mt19937& rng)
+	{
+		height += Bridge< GrowthRate >(type, age++, rng);
+		uptake = Bridge<Uptake>(type, height);
+	}
+
 private:
 	TreeTy type;
 	float height = 0.0f;

@@ -92,12 +92,13 @@ constexpr auto GetMaxrc(SoilTy t)
 		ENUM_SOIL()
 #undef X
 	}
+	return SoilMax<SoilTy::rock>::rc;
 }
 
 
 // https://www.researchgate.net/profile/M-D-Swaine/publication/231995620_Tree_population_dynamics_at_Kade_Ghana_1968-1982/links/00b49528f5b9f99875000000/Tree-population-dynamics-at-Kade-Ghana-1968-1982.pdf
 constexpr Resources sample_production {
-	.Water = 1.64f * SoilMax<SoilTy::water>::ro * cell_w * cell_w
+	.Water = 1.64f * SoilMax<SoilTy::water>::ro * cell_w * cell_w * 0.5
 };
 
 
@@ -105,13 +106,28 @@ class Cell
 {
 public:
 	constexpr Cell() = default;
-	constexpr Cell(SoilTy st, Resources rc, Resources production)noexcept
-		:st(st), rc(rc), rc_max(GetMaxrc(st)), rc_production(production)
-	{}
+	constexpr Cell(SoilTy st, Resources xrc, Resources production = sample_production)noexcept
+		:st(st), rc(xrc), rc_max(GetMaxrc(st)), rc_production(production)
+	{
+		if (st == SoilTy::water)
+		{
+			rc = SoilMax<SoilTy::water>::rc;
+			rc_production = SoilMax<SoilTy::water>::rc;
+		}
+	}
 public:
 	auto Type()const noexcept
 	{
 		return st;
+	}
+	void UpdateResources(const Cell& left, const Cell& right, const Cell& up, const Cell& down)
+	{
+		rc = rc / 2 + left.rc / 8 + right.rc / 8 + up.rc / 8 + down.rc / 8;
+		rc.Clamp(rc_max);
+	}
+	void Produce()
+	{
+		rc.Produce(rc_production, rc_max);
 	}
 private:
 	SoilTy st;

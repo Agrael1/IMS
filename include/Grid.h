@@ -1,5 +1,6 @@
 #pragma once
 #include "Cell.h"
+#include <vector>
 
 constexpr std::string_view map =
 "##############~~**********************************"
@@ -46,38 +47,35 @@ class Grid
 	static constexpr float hdelta = 1.0f / height;
 	static constexpr float wdelta = 1.0f / width;
 public:
-	Grid(std::string_view map)
-	{
-		float xh = 0;
-		float xw = 0;
-
-		for (size_t i = 0, j = 0; j * height + i < height * width; )
-		{
-			auto* x = grid.data() + j * height + i;
-			std::construct_at(x, Decode(sample(xw, xh)), Resources{}, Resources{});
-
-			if (i == width - 1)
-			{
-				i = 0;
-				xw = 0;
-				j++;
-				xh += hdelta;
-				continue;
-			}
-			xw += wdelta;
-			i++;
-		}
-	}
+	Grid(std::string_view map);
 public:
-	void Write()const
+	void Write()const;
+	void Update();
+private:
+	auto& get(size_t i, size_t j)
 	{
-		for (size_t i = 0; auto && c: grid)
-		{
-			putchar(Encode(c.Type()));
-			if (i == width - 1) { putchar('\n'); i = 0; continue; }
-			i++;
-		}
+		return grid[j * width + i];
+	}
+	auto& get_top(size_t i, size_t j)
+	{
+		if (j == 1)
+			return get(i, 0);
+		return reserves.front();
+	}
+	auto& get_left(size_t i, size_t j)
+	{
+		if (i == 1)
+			return get(0, j);
+		return reserves.at(reserves.size() - 2);
+	}
+	void trim()
+	{
+		if (reserves.size() > width - 2) //frame does not count
+			reserves.pop_back();
 	}
 private:
+	size_t time = 0;
+	bool odd = false;
+	std::vector<Cell> reserves;
 	std::array<Cell, width* height> grid;
 };

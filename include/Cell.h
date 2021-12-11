@@ -2,7 +2,7 @@
 #include "Resources.h"
 #include "Tree.h"
 #include <optional>
-#include <memory>
+#include <array>
 
 #define ENUM_SOIL() X(chernoz) X(seroz) X(water) X(rock)
 
@@ -12,6 +12,30 @@ enum class SoilTy
 	ENUM_SOIL()
 #undef X
 };
+
+constexpr SoilTy Decode(char c)
+{
+	switch (c)
+	{
+	case '#':return SoilTy::chernoz;
+	case '*':return SoilTy::seroz;
+	case '~':return SoilTy::water;
+	case '0':return SoilTy::rock;
+	}
+	return SoilTy::rock;
+}
+constexpr char Encode(SoilTy c)
+{
+	switch (c)
+	{
+	case SoilTy::chernoz: return  '#';
+	case SoilTy::seroz:return  '*';
+	case SoilTy::water:return  '~';
+	case SoilTy::rock:return  '0';
+	}
+	return '0';
+}
+
 
 constexpr float cell_w = 3.0f;
 constexpr float cell_V = cell_w * cell_w * cell_w;
@@ -80,14 +104,22 @@ constexpr Resources sample_production {
 class Cell
 {
 public:
+	constexpr Cell() = default;
 	constexpr Cell(SoilTy st, Resources rc, Resources production)noexcept
-		:rc(rc), rc_max(GetMaxrc(st)), rc_production(production)
+		:st(st), rc(rc), rc_max(GetMaxrc(st)), rc_production(production)
 	{}
+public:
+	auto Type()const noexcept
+	{
+		return st;
+	}
 private:
+	SoilTy st;
 	Resources rc;
 	Resources rc_max;
 	Resources rc_production;
 	std::optional<Tree> tree;
+	std::array<size_t, size_t(TreeTy::Count)> seeds{0};
 };
 
 #undef ENUM_SOIL

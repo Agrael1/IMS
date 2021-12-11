@@ -11,6 +11,6 @@ include_directories(include)
 
 
 # Add source to this project's executable.
-add_executable ("${PROJECT_NAME}"  "src/EntryMain.cpp" "include/Grid.h" "include/Cell.h" "include/Resources.h" "include/Tree.h")
+add_executable ("${PROJECT_NAME}"  "src/EntryMain.cpp" "include/Grid.h" "include/Cell.h" "include/Resources.h" "include/Tree.h" "src/Grid.cpp")
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "${PROJECT_NAME}")
 # TODO: Add tests and install targets if needed.

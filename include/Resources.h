@@ -21,9 +21,21 @@ public:
 	{
 		return Resources{ Water + prod.Water };
 	}
+	auto operator-(const Resources& cons)const
+	{
+		return Resources{ Water - cons.Water };
+	}
+	auto operator-=(const Resources& cons)
+	{
+		return Water -= cons.Water;
+	}
 	auto operator*(float a)const
 	{
 		return Resources{ Water * a };
+	}
+	auto operator*(Resources a)const
+	{
+		return Resources{ Water * a.Water };
 	}
 	void Clamp(Resources max)
 	{

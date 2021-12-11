@@ -97,16 +97,33 @@ constexpr auto GetMaxrc(SoilTy t)
 
 
 // https://www.researchgate.net/profile/M-D-Swaine/publication/231995620_Tree_population_dynamics_at_Kade_Ghana_1968-1982/links/00b49528f5b9f99875000000/Tree-population-dynamics-at-Kade-Ghana-1968-1982.pdf
-constexpr Resources sample_production {
+constexpr Resources sample_production{
 	.Water = 1.64f * SoilMax<SoilTy::water>::ro * cell_w * cell_w * 0.5
+};
+
+class Random
+{
+public:
+	static auto& get()
+	{
+		static Random r;
+		return r.rng;
+	}
+private:
+	std::mt19937 rng;
 };
 
 
 class Cell
 {
 public:
-	constexpr Cell() = default;
-	constexpr Cell(SoilTy st, Resources xrc, Resources production = sample_production)noexcept
+	using von_neuman = struct
+	{
+		Cell& left; Cell& right; Cell& up; Cell& down;
+	};
+public:
+	Cell() = default;
+	Cell(SoilTy st, Resources xrc, Resources production = sample_production)noexcept
 		:st(st), rc(xrc), rc_max(GetMaxrc(st)), rc_production(production)
 	{
 		if (st == SoilTy::water)
@@ -120,9 +137,90 @@ public:
 	{
 		return st;
 	}
-	void UpdateResources(const Cell& left, const Cell& right, const Cell& up, const Cell& down)
+
+	template<typename ...Args>
+	void PlantTree(Args&& ...args)
 	{
-		rc = rc / 2 + left.rc / 8 + right.rc / 8 + up.rc / 8 + down.rc / 8;
+		tree.emplace(std::forward<Args>(args)...);
+	}
+
+	void TreeTake()
+	{
+		if (!tree) return;
+		rc -= tree->GetUptake();
+		if (!tree->HasRoots() && rc.Water < 0) {
+			tree.reset();
+			rc.Water = 0.0f;
+		}
+	}
+	void Compensate(von_neuman eps)
+	{
+		if (!tree) return;
+		if (rc.Water > 0)return;
+
+		float sum = rc.Water;
+		auto xnul = [&](float* a) {if (*a > 0.0f) { rc.Water += *a; *a = 0.0f; } };
+		auto xsum = [&](float* a) {sum += *a > 0? *a : 0; };
+
+
+		std::array<float*, 4> x = { &eps.down.rc.Water, &eps.up.rc.Water, &eps.left.rc.Water, &eps.right.rc.Water };
+		std::for_each(x.begin(), x.end(), xsum);
+
+		if (sum < 0)
+		{
+			for (auto i : x)
+				xnul(i);
+			if (!tree->Survives(rc))
+			{
+				rc.Water = 0.0f;
+				return tree.reset();
+			}
+			(*tree)++;
+			rc.Water = 0.0f;
+			return;
+		}
+
+		float minw = *x[0];
+		for (auto i : x)
+			minw = std::min(*i, minw);
+		if (minw >= rc.Water / 4)
+		{
+			eps.down.rc.Water += rc.Water / 4;
+			eps.up.rc.Water += rc.Water / 4;
+			eps.left.rc.Water += rc.Water / 4;
+			eps.right.rc.Water += rc.Water / 4;
+			tree->Grow(Random::get());
+			return;
+		}
+
+
+		float rest = 4.0f;
+		float f = rc.Water/ rest;
+		std::sort(x.begin(), x.end(), [](auto l, auto r) {return *l < *r; });
+		for (auto i : x)
+		{
+			if (*i <= 0)
+			{
+				rest -= 1.0f;
+				continue;
+			}
+			f = rc.Water / rest;
+			if (*i > -f)
+			{
+				*i += f;
+				rest -= 1.0f;
+				rc.Water -= f;
+				continue;
+			}
+			rc.Water += *i;
+			*i = 0.0f;
+			rest -= 1.0f;
+		}
+		tree->Grow(Random::get());
+	}
+	void UpdateResources(const von_neuman eps)
+	{
+		rc = rc / 2 + eps.left.rc / 8 + eps.right.rc / 8 + eps.up.rc / 8 + eps.down.rc / 8;
 		rc.Clamp(rc_max);
 	}
 	void Produce()
@@ -135,7 +233,7 @@ private:
 	Resources rc_max;
 	Resources rc_production;
 	std::optional<Tree> tree;
-	std::array<size_t, size_t(TreeTy::Count)> seeds{0};
+	std::array<size_t, size_t(TreeTy::Count)> seeds{ 0 };
 };
 
 #undef ENUM_SOIL

@@ -2,6 +2,7 @@
 #include "Resources.h"
 #include <random>
 #include <cassert>
+#include <numeric>
 
 #define ENUM_TREE() X(oak) X(pine)
 
@@ -25,6 +26,7 @@ template<>struct TreeMax<TreeTy::oak> {
 	static constexpr bool defined = true;
 	static constexpr float height = 30.5f;
 	static constexpr size_t age = 1000U;
+	static constexpr size_t root_ac = 27; //https://www.fs.fed.us/pnw/olympia/silv/oak-studies/oak-roots.shtml
 	static constexpr size_t repr_age = 35;
 	static constexpr float seed_chance = .70f;
 	static constexpr Resources uptake_norm{
@@ -49,6 +51,7 @@ template<>struct TreeMax<TreeTy::pine> {
 	static constexpr bool defined = true;
 	static constexpr float height = (63.0f + 45.0f) / 2.0f;
 	static constexpr float seed_chance = .55f;
+	static constexpr size_t root_ac = 25; //https://zen.yandex.ru/media/id/5c07e1a9ded11e00aa96001f/korni-sosny-dlinoi-48-kilometrov-5ce579d3ef774e00b33271ef
 	static constexpr size_t age = 300;
 	static constexpr size_t repr_age = 20; //https://www.fs.fed.us/database/feis/plants/tree/pinalb/all.html#:~:text=Cones%20are%201st%20produced%20at,trees%20still%20reproduce%20%5B207%5D.
 	static constexpr Resources uptake_norm{
@@ -122,10 +125,33 @@ struct Uptake
 		return TreeMax<T>::uptake_coeff * height;
 	}
 };
+template<TreeTy T>
+struct UptakeSurv
+{
+	static constexpr auto Exec() noexcept
+	{
+		return TreeMax<T>::uptake_survival;
+	}
+};
+template<TreeTy T>
+struct RootAdj
+{
+	bool constexpr auto Exec(size_t age) noexcept
+	{
+		return TreeMax<T>::root_ac < age;
+	}
+};
+
+class Cell;
 
 //this is my tree, my tree is amazing, give it a lick
 class Tree
 {
+public:
+	using von_neuman = struct
+	{
+		Cell& left; Cell& right; Cell& up; Cell& down;
+	};
 public:
 	//sappling ctor
 	constexpr Tree(TreeTy type)
@@ -136,12 +162,27 @@ public:
 		, uptake(Bridge<Uptake>(type, height))
 	{}
 public:
+	bool HasRoots()const noexcept
+	{
+		return Bridge<RootAdj>(type, age);
+	}
 	void Grow(std::mt19937& rng)
 	{
 		height += Bridge< GrowthRate >(type, age++, rng);
 		uptake = Bridge<Uptake>(type, height);
 	}
-
+	bool Survives(Resources res)
+	{
+		return (res + (uptake - uptake * Bridge<UptakeSurv>(type))).Water > 0;
+	}
+	Resources GetUptake()const noexcept
+	{
+		return uptake;
+	}
+	void operator++(int)
+	{
+		age++;
+	}
 private:
 	TreeTy type;
 	float height = 0.0f;

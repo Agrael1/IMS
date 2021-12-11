@@ -27,6 +27,7 @@ constexpr std::string_view map =
 "##################################################"
 ;
 
+
 //constexpr std::string_view map = "*#~0";
 constexpr size_t width_map = 50;
 constexpr size_t height_map = map.size() / width_map;

@@ -3,6 +3,7 @@
 #include "Tree.h"
 #include <optional>
 #include <array>
+#include <functional>
 
 #define ENUM_SOIL() X(chernoz) X(seroz) X(water) X(rock)
 
@@ -150,8 +151,11 @@ public:
 	template<typename ...Args>
 	void PlantTree(Args&& ...args)
 	{
+		if (st == SoilTy::water)return;
 		tree.emplace(std::forward<Args>(args)...);
+		if (OnTreePlant)OnTreePlant();
 	}
+
 
 	void TreeTake()
 	{
@@ -159,12 +163,14 @@ public:
 		if (tree->Dies())
 		{
 			tree.reset();
+			if (OnTreeDies)OnTreeDies();
 			return;
 		}
 		rc -= tree->GetUptake();
 		(*tree)++;
 		if (!tree->HasRoots() && rc.Water < 0) {
 			tree.reset();
+			if (OnTreeDies)OnTreeDies();
 			rc.Water = 0.0f;
 		}
 	}
@@ -188,6 +194,7 @@ public:
 			if (!tree->Survives(rc))
 			{
 				rc.Water = 0.0f;
+				if (OnTreeDies)OnTreeDies();
 				return tree.reset();
 			}
 			rc.Water = 0.0f;
@@ -287,6 +294,12 @@ public:
 	{
 		rc.Produce(rc_production, rc_max);
 	}
+public:
+	static void SetCallbacks(std::function<void()> xOnTreePlant, std::function<void()> xOnTreeDies)
+	{
+		OnTreePlant = xOnTreePlant;
+		OnTreeDies = xOnTreeDies;
+	}
 private:
 	SoilTy st;
 	Resources rc;
@@ -294,6 +307,9 @@ private:
 	Resources rc_production;
 	std::optional<Tree> tree;
 	std::array<size_t, size_t(TreeTy::Count)> seeds{ 0 };
+
+	static std::function<void()> OnTreePlant;
+	static std::function<void()> OnTreeDies;
 };
 
 #undef ENUM_SOIL

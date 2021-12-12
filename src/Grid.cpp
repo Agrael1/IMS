@@ -36,6 +36,11 @@ Grid::Grid(std::string_view map)
 	get(38, 27).PlantTree(TreeTy::pine, 4, 2.23f);
 	get(39, 25).PlantTree(TreeTy::pine, 4, 2.23f);
 	get(39, 26).PlantTree(TreeTy::pine, 4, 2.23f);
+
+	Cell::SetCallbacks([&]() {trees++; }, 
+		[&]() {trees--; printf("%zu\n", trees); });
+
+	trees += 13;
 }
 
 void Grid::Write() const
@@ -50,7 +55,7 @@ void Grid::Write() const
 
 bool Grid::Update()
 {
-	if (trees > 20)
+	if (trees > 200)
 		return false;
 	time++;
 	//phases:
@@ -70,7 +75,7 @@ bool Grid::Update()
 				&get(i - 1, j),				&get(i + 1, j),
 				&get(i - 1, j + 1), &get(i, j + 1), &get(i + 1, j + 1) });
 
-			trees += size_t(x.GrowSeed());
+			size_t(x.GrowSeed());
 		}
 	}
 

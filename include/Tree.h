@@ -25,7 +25,7 @@ template <TreeTy T>struct TreeMax {
 template<>struct TreeMax<TreeTy::oak> {
 	static constexpr bool defined = true;
 	static constexpr float height = 30.5f;
-	static constexpr size_t age = 1000U;
+	static constexpr size_t age = 450;
 	static constexpr size_t root_ac = 27; //https://www.fs.fed.us/pnw/olympia/silv/oak-studies/oak-roots.shtml
 	static constexpr size_t repr_age = 35;
 	static constexpr float seed_chance = .70f;
@@ -136,9 +136,25 @@ struct UptakeSurv
 template<TreeTy T>
 struct RootAdj
 {
-	bool constexpr auto Exec(size_t age) noexcept
+	static constexpr auto Exec(size_t age) noexcept
 	{
 		return TreeMax<T>::root_ac < age;
+	}
+};
+template<TreeTy T>
+struct Repr
+{
+	static constexpr auto Exec(size_t age) noexcept
+	{
+		return TreeMax<T>::repr_age < age?TreeMax<T>::seed_chance:0;
+	}
+};
+template<TreeTy T>
+struct XDies
+{
+	static constexpr auto Exec(size_t age) noexcept
+	{
+		return TreeMax<T>::age < age;
 	}
 };
 
@@ -162,6 +178,18 @@ public:
 		, uptake(Bridge<Uptake>(type, height))
 	{}
 public:
+	auto GetType() const noexcept
+	{
+		return type;
+	}
+	float Reproduction()const noexcept
+	{
+		return Bridge<Repr>(type, age);
+	}
+	bool Dies()const noexcept
+	{
+		return Bridge<XDies>(type, age);
+	}
 	bool HasRoots()const noexcept
 	{
 		return Bridge<RootAdj>(type, age);

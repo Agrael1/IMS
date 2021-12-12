@@ -23,10 +23,10 @@ Grid::Grid(std::string_view map)
 		i++;
 	}
 	//TreeTy type, size_t age, float height
-	get(22, 45).PlantTree(TreeTy:: oak, 1, 0.23f);
-	get(22, 46).PlantTree(TreeTy:: oak, 30, 10.23f);
-	get(23, 45).PlantTree(TreeTy:: oak, 10, 5.23f);
-	get(23, 46).PlantTree(TreeTy:: oak, 17, 7.56f);
+	get(22, 45).PlantTree(TreeTy::oak, 1, 0.23f);
+	get(22, 46).PlantTree(TreeTy::oak, 30, 10.23f);
+	get(23, 45).PlantTree(TreeTy::oak, 10, 5.23f);
+	get(23, 46).PlantTree(TreeTy::oak, 17, 7.56f);
 	get(8, 6).PlantTree(TreeTy::pine, 1, 0.23f);
 	get(8, 7).PlantTree(TreeTy::pine, 6, 2.29f);
 	get(9, 5).PlantTree(TreeTy::pine, 10, 5.80f);
@@ -48,8 +48,10 @@ void Grid::Write() const
 	}
 }
 
-void Grid::Update()
+bool Grid::Update()
 {
+	if (trees > 20)
+		return false;
 	time++;
 	//phases:
 	//1) growth 
@@ -61,7 +63,14 @@ void Grid::Update()
 			auto& x = get(i, j);
 			x.TreeTake();
 			// compensate if not enough
-			x.Compensate({ get(i-1, j), get(i+1, j), get(i, j-1), get(i, j + 1) });
+			x.Compensate({ get(i - 1, j), get(i + 1, j), get(i, j - 1), get(i, j + 1) });
+
+			x.TreeReproduce({
+				&get(i - 1, j - 1), &get(i, j - 1), &get(i + 1, j - 1),
+				&get(i - 1, j),				&get(i + 1, j),
+				&get(i - 1, j + 1), &get(i, j + 1), &get(i + 1, j + 1) });
+
+			trees += size_t(x.GrowSeed());
 		}
 	}
 
@@ -81,4 +90,5 @@ void Grid::Update()
 	{
 		i.Produce();
 	}
+	return true;
 }

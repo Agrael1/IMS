@@ -121,6 +121,15 @@ public:
 	{
 		Cell& left; Cell& right; Cell& up; Cell& down;
 	};
+	struct XMoore
+	{
+		Cell* tl; Cell* tt; Cell* tr;
+		Cell* l;		    Cell* r;
+		Cell* bl; Cell* bb;	Cell* br;
+	};
+	using moore = union {
+		XMoore m; std::array<Cell*, 8> list;
+	};
 public:
 	Cell() = default;
 	Cell(SoilTy st, Resources xrc, Resources production = sample_production)noexcept
@@ -147,7 +156,13 @@ public:
 	void TreeTake()
 	{
 		if (!tree) return;
+		if (tree->Dies())
+		{
+			tree.reset();
+			return;
+		}
 		rc -= tree->GetUptake();
+		(*tree)++;
 		if (!tree->HasRoots() && rc.Water < 0) {
 			tree.reset();
 			rc.Water = 0.0f;
@@ -160,7 +175,7 @@ public:
 
 		float sum = rc.Water;
 		auto xnul = [&](float* a) {if (*a > 0.0f) { rc.Water += *a; *a = 0.0f; } };
-		auto xsum = [&](float* a) {sum += *a > 0? *a : 0; };
+		auto xsum = [&](float* a) {sum += *a > 0 ? *a : 0; };
 
 
 		std::array<float*, 4> x = { &eps.down.rc.Water, &eps.up.rc.Water, &eps.left.rc.Water, &eps.right.rc.Water };
@@ -175,7 +190,6 @@ public:
 				rc.Water = 0.0f;
 				return tree.reset();
 			}
-			(*tree)++;
 			rc.Water = 0.0f;
 			return;
 		}
@@ -195,7 +209,7 @@ public:
 
 
 		float rest = 4.0f;
-		float f = rc.Water/ rest;
+		float f = rc.Water / rest;
 		std::sort(x.begin(), x.end(), [](auto l, auto r) {return *l < *r; });
 		for (auto i : x)
 		{
@@ -217,6 +231,52 @@ public:
 			rest -= 1.0f;
 		}
 		tree->Grow(Random::get());
+	}
+	void TreeReproduce(moore eps)
+	{
+		if (!tree)return;
+		auto repr_c = tree->Reproduction();
+		if (repr_c == 0.0f)return;
+
+		for (auto i : eps.list)
+		{
+			float r = std::uniform_real_distribution<float>{ 0.0f, 1.0f }(Random::get());
+			if (r > repr_c)continue;
+			i->AddSeed(tree->GetType());
+		}
+	}
+
+	void AddSeed(TreeTy ty)
+	{
+		seeds[size_t(ty)]++;
+	}
+	bool GrowSeed()
+	{
+		if (!seeds[0] && !seeds[1])return false;
+		if (tree || st == SoilTy::water)
+		{
+			memset(seeds.data(), 0, sizeof(seeds));
+			return false;
+		}
+		if (!seeds[0])
+		{
+			PlantTree(TreeTy::pine);
+			return true;
+		}
+		if (!seeds[1])
+		{
+			PlantTree(TreeTy::oak);
+			return true;
+		}
+		float r = std::uniform_real_distribution<float>{ 0.0f, 1.0f }(Random::get());
+		if (r > 0.5){
+			PlantTree(TreeTy::oak);
+		}
+		else{
+			PlantTree(TreeTy::pine);
+		}
+		return true;
+
 	}
 	void UpdateResources(const von_neuman eps)
 	{

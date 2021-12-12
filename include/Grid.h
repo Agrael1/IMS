@@ -51,7 +51,7 @@ public:
 	Grid(std::string_view map);
 public:
 	void Write()const;
-	void Update();
+	bool Update();
 private:
 	auto& get(size_t i, size_t j)
 	{
@@ -76,6 +76,7 @@ private:
 	}
 private:
 	size_t time = 0;
+	size_t trees = 0;
 	bool odd = false;
 	std::vector<Cell> reserves;
 	std::array<Cell, width* height> grid;

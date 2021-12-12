@@ -23,24 +23,23 @@ Grid::Grid(std::string_view map)
 		i++;
 	}
 	//TreeTy type, size_t age, float height
-	get(22, 45).PlantTree(TreeTy::oak, 1, 0.23f);
-	get(22, 46).PlantTree(TreeTy::oak, 30, 10.23f);
-	get(23, 45).PlantTree(TreeTy::oak, 10, 5.23f);
-	get(23, 46).PlantTree(TreeTy::oak, 17, 7.56f);
-	get(8, 6).PlantTree(TreeTy::pine, 1, 0.23f);
-	get(8, 7).PlantTree(TreeTy::pine, 6, 2.29f);
-	get(9, 5).PlantTree(TreeTy::pine, 10, 5.80f);
-	get(9, 4).PlantTree(TreeTy::pine, 30, 10.23f);
-	get(38, 25).PlantTree(TreeTy::pine, 4, 2.23f);
-	get(38, 26).PlantTree(TreeTy::pine, 4, 2.23f);
-	get(38, 27).PlantTree(TreeTy::pine, 4, 2.23f);
-	get(39, 25).PlantTree(TreeTy::pine, 4, 2.23f);
-	get(39, 26).PlantTree(TreeTy::pine, 4, 2.23f);
+	get(10, 11).PlantTree(false, TreeTy::oak, 1, 0.23f);
+	get(10, 12).PlantTree(false, TreeTy::pine, 30, 10.23f);
+	get(11, 11).PlantTree(false, TreeTy::oak, 10, 5.23f);
+	get(11, 12).PlantTree(false, TreeTy::oak, 301, 7.56f);
+	get(8, 6).PlantTree(false, TreeTy::pine, 301, 0.23f);
+	get(8, 7).PlantTree(false, TreeTy::pine, 6, 2.29f);
+	get(9, 5).PlantTree(false, TreeTy::oak, 10, 5.80f);
+	get(9, 4).PlantTree(false, TreeTy::pine, 30, 10.23f);
+	get(14, 1).PlantTree(false, TreeTy::pine, 4, 2.23f);
+	get(14, 2).PlantTree(false, TreeTy::pine, 4, 2.23f);
+	get(14, 3).PlantTree(false, TreeTy::oak, 4, 2.23f);
+	get(15, 1).PlantTree(false, TreeTy::pine, 4, 2.23f);
+	get(15, 5).PlantTree(false, TreeTy::oak, 4, 2.23f);
 
 	Cell::SetCallbacks([&]() {trees++; }, 
-		[&]() {trees--; printf("%zu\n", trees); });
-
-	trees += 13;
+		[&]() {trees--; });
+	trees = 13;
 }
 
 void Grid::Write() const
@@ -55,8 +54,6 @@ void Grid::Write() const
 
 bool Grid::Update()
 {
-	if (trees > 200)
-		return false;
 	time++;
 	//phases:
 	//1) growth 
@@ -75,7 +72,13 @@ bool Grid::Update()
 				&get(i - 1, j),				&get(i + 1, j),
 				&get(i - 1, j + 1), &get(i, j + 1), &get(i + 1, j + 1) });
 
-			size_t(x.GrowSeed());
+			x.GrowSeed();
+			if (x.Updates())
+			{
+				update(i, j);
+				x.DoneUpd();
+			}
+
 		}
 	}
 

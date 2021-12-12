@@ -1,9 +1,17 @@
 #include "Grid.h"
+#include <App.h>
 
-int main()
+int main(int argc, char* argv[])
 {
-	Grid g(map);
-	g.Write();
-	while(g.Update()) ;
-	return 0;
+	return App{ argc, argv }.Start();
 }
+
+//int main()
+//{
+//
+//
+//	Grid g(map);
+//	g.Write();
+//	while(g.Update()) ;
+//	return 0;
+//}

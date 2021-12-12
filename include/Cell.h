@@ -7,7 +7,7 @@
 
 #define ENUM_SOIL() X(chernoz) X(seroz) X(water) X(rock)
 
-enum class SoilTy
+enum class SoilTy : uint8_t
 {
 #define X(a) a,
 	ENUM_SOIL()
@@ -143,41 +143,70 @@ public:
 		}
 	}
 public:
+	auto& GetTree()const noexcept
+	{
+		return tree;
+	}
 	auto Type()const noexcept
 	{
 		return st;
 	}
-
+	bool Updates()const noexcept
+	{
+		return updates;
+	}
+	void DoneUpd()noexcept
+	{
+		updates = false;
+	}
+	template<typename ...Args>
+	void PlantTree(bool upd, Args&& ...args)
+	{
+		if (st == SoilTy::water)return;
+		tree.emplace(std::forward<Args>(args)...);
+		if (OnTreePlant)OnTreePlant();
+	}
 	template<typename ...Args>
 	void PlantTree(Args&& ...args)
 	{
 		if (st == SoilTy::water)return;
 		tree.emplace(std::forward<Args>(args)...);
 		if (OnTreePlant)OnTreePlant();
+		updates = true;
 	}
 
-
+	void OnDeath()
+	{
+		if (OnTreeDies)OnTreeDies();
+		updates = true;
+		died = true;
+	}
 	void TreeTake()
 	{
 		if (!tree) return;
 		if (tree->Dies())
 		{
 			tree.reset();
-			if (OnTreeDies)OnTreeDies();
+			OnDeath();
 			return;
 		}
 		rc -= tree->GetUptake();
 		(*tree)++;
 		if (!tree->HasRoots() && rc.Water < 0) {
 			tree.reset();
-			if (OnTreeDies)OnTreeDies();
+			OnDeath();
 			rc.Water = 0.0f;
 		}
 	}
 	void Compensate(von_neuman eps)
 	{
 		if (!tree) return;
-		if (rc.Water > 0)return;
+		if (rc.Water > 0)
+		{
+			tree->Grow(Random::get());
+			return;
+		}
+
 
 		float sum = rc.Water;
 		auto xnul = [&](float* a) {if (*a > 0.0f) { rc.Water += *a; *a = 0.0f; } };
@@ -194,8 +223,8 @@ public:
 			if (!tree->Survives(rc))
 			{
 				rc.Water = 0.0f;
-				if (OnTreeDies)OnTreeDies();
-				return tree.reset();
+				tree.reset();
+				return OnDeath();
 			}
 			rc.Water = 0.0f;
 			return;
@@ -259,6 +288,10 @@ public:
 	}
 	bool GrowSeed()
 	{
+		if (died){
+			died = false;
+			return false;
+		}
 		if (!seeds[0] && !seeds[1])return false;
 		if (tree || st == SoilTy::water)
 		{
@@ -302,6 +335,8 @@ public:
 	}
 private:
 	SoilTy st;
+	bool updates = false;
+	bool died = false;
 	Resources rc;
 	Resources rc_max;
 	Resources rc_production;

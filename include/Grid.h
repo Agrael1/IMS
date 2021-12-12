@@ -43,15 +43,21 @@ inline char sample(float width, float height)
 
 class Grid
 {
-	static constexpr auto height = 50;
-	static constexpr auto width = 50;
+	friend class GGrid;
+public:
+	static constexpr auto height = 20;
+	static constexpr auto width = 20;
 	static constexpr float hdelta = 1.0f / height;
 	static constexpr float wdelta = 1.0f / width;
 public:
-	Grid(std::string_view map);
+	Grid(std::string_view map = map);
 public:
 	void Write()const;
 	bool Update();
+	void SetCallback(const std::function<void(size_t, size_t)>& a)
+	{
+		update = a;
+	}
 private:
 	auto& get(size_t i, size_t j)
 	{
@@ -77,7 +83,7 @@ private:
 private:
 	size_t time = 0;
 	size_t trees = 0;
-	bool odd = false;
 	std::vector<Cell> reserves;
 	std::array<Cell, width* height> grid;
+	std::function<void(size_t, size_t)> update;
 };

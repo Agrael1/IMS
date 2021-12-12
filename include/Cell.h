@@ -56,7 +56,7 @@ template<>struct SoilMax<SoilTy::chernoz> {
 	static constexpr bool defined = true;
 	static constexpr float ro = 1200.0f;
 	static constexpr Resources rc{
-		.Water = (61.9f + 38.3f + 32.5f) / 300.0f * Mass(ro) * 2
+		.Water = (61.9f + 38.3f + 32.5f) / 300.0f * Mass(ro)
 	};
 };
 template<>struct SoilMax<SoilTy::seroz> {

@@ -37,13 +37,14 @@ void MainWindow::timerEvent(QTimerEvent* event)
 		}
 		return;
 	}
-	if (test!=5) {
+	if (test!=10) {
 
-		auto i = uint8_t(!core->scene.StartFor(10));
+		auto i = !core->scene.StartFor(10);
 		if (i)
 		{
 			core->scene.SendStats();
 			core->scene.Refresh();
+			test++;
 		}
 	}
 	else

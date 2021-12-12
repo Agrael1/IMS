@@ -169,7 +169,7 @@ public:
 	template<typename ...Args>
 	void PlantTree(bool upd, Args&& ...args)
 	{
-		if (st == SoilTy::water)return;
+		if (st == SoilTy::water|| st == SoilTy::rock)return;
 		tree.emplace(std::forward<Args>(args)...);
 		if (OnTreePlant)OnTreePlant();
 	}

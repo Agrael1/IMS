@@ -24,7 +24,7 @@ Grid::Grid(std::string_view map)
 	}
 	//TreeTy type, size_t age, float height
 	get(10, 11).PlantTree(false, TreeTy::oak, 1, 0.23f);
-	get(10, 12).PlantTree(false, TreeTy::pine, 30, 10.23f);
+	get(10, 14).PlantTree(false, TreeTy::pine, 30, 10.23f);
 	get(11, 11).PlantTree(false, TreeTy::oak, 10, 5.23f);
 	get(11, 12).PlantTree(false, TreeTy::oak, 301, 7.56f);
 	get(8, 6).PlantTree(false, TreeTy::pine, 301, 0.23f);
@@ -91,7 +91,6 @@ bool Grid::Update()
 				update(i, j);
 				x.DoneUpd();
 			}
-
 		}
 	}
 

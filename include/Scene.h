@@ -1,9 +1,7 @@
 #pragma once
 #include <QGraphicsScene>
-#include <thread>
 
 class Core;
-class QThread;
 
 class FlowScene : public QGraphicsScene
 {
@@ -12,8 +10,8 @@ public:
 	~FlowScene();
 public:
 	void Start();
+	bool StartFor(size_t time);
+	void SendStats()const;
 private:
 	std::unique_ptr<Core> c;
-	std::jthread thread;
-	std::atomic_bool launch = false;
 };

@@ -28,10 +28,27 @@ FlowScene::FlowScene()
 }
 FlowScene::~FlowScene()
 {
-	launch = false;
 }
 
 void FlowScene::Start()
 {
 	c->grid.Update();
+}
+
+bool FlowScene::StartFor(size_t time)
+{
+	return c->grid.UpdateFor(time);
+}
+
+void FlowScene::SendStats() const
+{
+	auto st = c->grid.GetStats();
+
+	printf("Age of the system: %zu\n"
+		"Current Trees: %zu\n"
+		"Died from Starvation: %zu\n"
+		"Died of old Age: %zu\n"
+		"Population index: %.2f\n"
+		,st.time, st.trees, st.trees_starved, st.trees_aged, 
+		float(st.trees_starved + st.trees_aged)/float(st.trees_all));
 }

@@ -37,8 +37,21 @@ Grid::Grid(std::string_view map)
 	get(15, 1).PlantTree(false, TreeTy::pine, 4, 2.23f);
 	get(15, 5).PlantTree(false, TreeTy::oak, 4, 2.23f);
 
-	Cell::SetCallbacks([&]() {trees++; }, 
-		[&]() {trees--; });
+	Cell::SetCallbacks([&]() {trees++; trees_all++; },
+		[&](Cell::Reason r) {
+			trees--; 
+			switch (r)
+			{
+			case Cell::Reason::Starvation:
+				trees_starved++;
+				break;
+			case Cell::Reason::Age:
+				trees_aged++;
+				break;
+			default:
+				break;
+			}
+		});
 	trees = 13;
 }
 
@@ -99,4 +112,11 @@ bool Grid::Update()
 		i.Produce();
 	}
 	return true;
+}
+
+bool Grid::UpdateFor(size_t maxtime)
+{
+	if (time != maxtime)
+		return Update();
+	return false;
 }

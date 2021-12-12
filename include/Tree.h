@@ -186,6 +186,10 @@ public:
 	{
 		return Bridge<Repr>(type, age);
 	}
+	auto Age()const noexcept
+	{
+		return age;
+	}
 	bool Dies()const noexcept
 	{
 		return Bridge<XDies>(type, age);

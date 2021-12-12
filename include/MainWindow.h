@@ -22,5 +22,6 @@ public:
 private:
 	QAction start;
 	std::optional<Core> core;
-	int timerId;
+	int timerId = 0;
+	bool runs = true;
 };

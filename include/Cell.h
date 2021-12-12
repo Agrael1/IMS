@@ -56,7 +56,7 @@ template<>struct SoilMax<SoilTy::chernoz> {
 	static constexpr bool defined = true;
 	static constexpr float ro = 1200.0f;
 	static constexpr Resources rc{
-		.Water = (61.9f + 38.3f + 32.5f) / 300.0f * Mass(ro)
+		.Water = (61.9f + 38.3f + 32.5f) / 300.0f * Mass(ro) * 2
 	};
 };
 template<>struct SoilMax<SoilTy::seroz> {
@@ -99,7 +99,7 @@ constexpr auto GetMaxrc(SoilTy t)
 
 // https://www.researchgate.net/profile/M-D-Swaine/publication/231995620_Tree_population_dynamics_at_Kade_Ghana_1968-1982/links/00b49528f5b9f99875000000/Tree-population-dynamics-at-Kade-Ghana-1968-1982.pdf
 constexpr Resources sample_production{
-	.Water = 1.64f * SoilMax<SoilTy::water>::ro * cell_w * cell_w * 0.5
+	.Water = 1.64f * SoilMax<SoilTy::water>::ro * cell_w * cell_w * 2
 };
 
 class Random
@@ -117,6 +117,13 @@ private:
 
 class Cell
 {
+public:
+	enum class Reason
+	{
+		Starvation,
+		Age,
+		Premature
+	};
 public:
 	using von_neuman = struct
 	{
@@ -175,9 +182,9 @@ public:
 		updates = true;
 	}
 
-	void OnDeath()
+	void OnDeath(Reason r)
 	{
-		if (OnTreeDies)OnTreeDies();
+		if (OnTreeDies)OnTreeDies(r);
 		updates = true;
 		died = true;
 	}
@@ -187,14 +194,15 @@ public:
 		if (tree->Dies())
 		{
 			tree.reset();
-			OnDeath();
+			OnDeath(Reason::Age);
 			return;
 		}
 		rc -= tree->GetUptake();
 		(*tree)++;
 		if (!tree->HasRoots() && rc.Water < 0) {
+			Reason r = tree->Age() < 4 ? Reason::Premature : Reason::Starvation;
 			tree.reset();
-			OnDeath();
+			OnDeath(Reason::Starvation);
 			rc.Water = 0.0f;
 		}
 	}
@@ -223,8 +231,9 @@ public:
 			if (!tree->Survives(rc))
 			{
 				rc.Water = 0.0f;
+				Reason r = tree->Age() < 4 ? Reason::Premature : Reason::Starvation;
 				tree.reset();
-				return OnDeath();
+				return OnDeath(r);
 			}
 			rc.Water = 0.0f;
 			return;
@@ -293,7 +302,7 @@ public:
 			return false;
 		}
 		if (!seeds[0] && !seeds[1])return false;
-		if (tree || st == SoilTy::water)
+		if (tree || st == SoilTy::water || st == SoilTy::rock)
 		{
 			memset(seeds.data(), 0, sizeof(seeds));
 			return false;
@@ -328,7 +337,7 @@ public:
 		rc.Produce(rc_production, rc_max);
 	}
 public:
-	static void SetCallbacks(std::function<void()> xOnTreePlant, std::function<void()> xOnTreeDies)
+	static void SetCallbacks(std::function<void()> xOnTreePlant, std::function<void(Reason)> xOnTreeDies)
 	{
 		OnTreePlant = xOnTreePlant;
 		OnTreeDies = xOnTreeDies;
@@ -344,7 +353,7 @@ private:
 	std::array<size_t, size_t(TreeTy::Count)> seeds{ 0 };
 
 	static std::function<void()> OnTreePlant;
-	static std::function<void()> OnTreeDies;
+	static std::function<void(Reason)> OnTreeDies;
 };
 
 #undef ENUM_SOIL

@@ -45,6 +45,15 @@ class Grid
 {
 	friend class GGrid;
 public:
+	struct Stats
+	{
+		size_t time = 0;
+		size_t trees = 0;
+		size_t trees_starved = 0;
+		size_t trees_aged = 0;
+		size_t trees_all = 0;
+	};
+public:
 	static constexpr auto height = 20;
 	static constexpr auto width = 20;
 	static constexpr float hdelta = 1.0f / height;
@@ -54,9 +63,14 @@ public:
 public:
 	void Write()const;
 	bool Update();
+	bool UpdateFor(size_t maxtime);
 	void SetCallback(const std::function<void(size_t, size_t)>& a)
 	{
 		update = a;
+	}
+	auto GetStats()const noexcept
+	{
+		return Stats{time, trees, trees_starved, trees_aged, trees_all};
 	}
 private:
 	auto& get(size_t i, size_t j)
@@ -83,6 +97,9 @@ private:
 private:
 	size_t time = 0;
 	size_t trees = 0;
+	size_t trees_starved = 0;
+	size_t trees_aged = 0;
+	size_t trees_all = 0;
 	std::vector<Cell> reserves;
 	std::array<Cell, width* height> grid;
 	std::function<void(size_t, size_t)> update;

@@ -24,4 +24,5 @@ private:
 	std::optional<Core> core;
 	int timerId = 0;
 	bool runs = true;
+	uint8_t test = 0;
 };

@@ -20,7 +20,7 @@ void MainWindow::OnStart()
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-	if(timerId)
+	if (timerId)
 		killTimer(timerId);
 	core.reset();
 }
@@ -30,11 +30,26 @@ void MainWindow::timerEvent(QTimerEvent* event)
 	if (runs)
 	{
 		runs = core->scene.StartFor(100);
+		if (!runs)
+		{
+			core->scene.SendStats();
+			core->scene.Refresh();
+		}
+		return;
 	}
-	if (!runs)
+	if (test!=5) {
+
+		auto i = uint8_t(!core->scene.StartFor(10));
+		if (i)
+		{
+			core->scene.SendStats();
+			core->scene.Refresh();
+		}
+	}
+	else
 	{
-		core->scene.SendStats();
 		killTimer(timerId);
 		timerId = 0;
 	}
+
 }

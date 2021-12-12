@@ -48,7 +48,12 @@ void FlowScene::SendStats() const
 		"Current Trees: %zu\n"
 		"Died from Starvation: %zu\n"
 		"Died of old Age: %zu\n"
-		"Population index: %.2f\n"
+		"Population index: %.2f\n\n"
 		,st.time, st.trees, st.trees_starved, st.trees_aged, 
 		float(st.trees_starved + st.trees_aged)/float(st.trees_all));
+}
+
+void FlowScene::Refresh()
+{
+	c->grid.Zero();
 }

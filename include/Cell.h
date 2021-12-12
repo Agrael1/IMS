@@ -99,7 +99,7 @@ constexpr auto GetMaxrc(SoilTy t)
 
 // https://www.researchgate.net/profile/M-D-Swaine/publication/231995620_Tree_population_dynamics_at_Kade_Ghana_1968-1982/links/00b49528f5b9f99875000000/Tree-population-dynamics-at-Kade-Ghana-1968-1982.pdf
 constexpr Resources sample_production{
-	.Water = 1.64f * SoilMax<SoilTy::water>::ro * cell_w * cell_w * 2
+	.Water = 1.64f * SoilMax<SoilTy::water>::ro * cell_w * cell_w
 };
 
 class Random

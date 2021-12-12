@@ -72,6 +72,13 @@ public:
 	{
 		return Stats{time, trees, trees_starved, trees_aged, trees_all};
 	}
+	void Zero()
+	{
+		time = 0;
+		trees_starved = 0;
+		trees_aged = 0;
+		trees_all = trees;
+	}
 private:
 	auto& get(size_t i, size_t j)
 	{

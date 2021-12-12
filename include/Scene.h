@@ -12,6 +12,7 @@ public:
 	void Start();
 	bool StartFor(size_t time);
 	void SendStats()const;
+	void Refresh();
 private:
 	std::unique_ptr<Core> c;
 };
